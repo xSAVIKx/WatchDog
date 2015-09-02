@@ -9,19 +9,24 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
 import com.github.xsavikx.websitemonitor.db.DbManager;
 import com.github.xsavikx.websitemonitor.db.model.WatchDogCheck;
+import com.github.xsavikx.websitemonitor.db.model.WatchDogCheckType;
 
 public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
 
-  private static final Logger logger = Logger.getLogger(WatchDogWebsiteDAO.class);
+  private static final Logger LOGGER = Logger.getLogger(WatchDogWebsiteDAO.class);
 
   private static final String SQL__SELECT_WATCHDOG_WEBSITE_IN_INTERVAL = "SELECT website_id AS reference_id, website_url AS URL_to_check FROM watchdog_website AS watch WHERE ( lastverified + INTERVAL frequency MINUTE) < UTC_TIMESTAMP() OR lastverified is null ORDER BY lastverified asc LIMIT 100";
 
   @Override
   public List<WatchDogCheck> getTasksToCheck() {
+    LOGGER.debug("getTasksToCheck() - start");
+
     // set datasource as class variable if not already set
     if (!checkDataSource()) {
+      LOGGER.debug("getTasksToCheck() - end");
       return null;
     }
     // database connection object
@@ -65,25 +70,29 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
           // the administrator
           while (todoList.next()) {
             WatchDogCheck WatchDogCheck = new WatchDogCheck();
-            WatchDogCheck.setSource("watchdog_website");
+            WatchDogCheck.setSource(DatabaseRoutine.WATCH_DOG_WEBSITE);
             WatchDogCheck.setReferenceId(todoList.getInt("reference_id"));
-            WatchDogCheck.setCheckType("website");
+            WatchDogCheck.setCheckType(WatchDogCheckType.WEBSITE);
             WatchDogCheck.setUrlToCheck(todoList.getString("url_to_check"));
             checkList.add(WatchDogCheck);
           }
           if (checkList.size() >= MAXIMUM_CHECK_LIST_SIZE) {
             // send email to admin here
           }
+
+          LOGGER.debug("getTasksToCheck() - end");
           return checkList;
         }
       }
     } catch (SQLException e) {
       DbManager.rollbackAndClose(conn);
-      logger.error("Error in SBS_WatchDog.getPagestocheck", e);
+      LOGGER.error("Error in SBS_WatchDog.getPagestocheck", e);
       e.printStackTrace();
     } finally {
       DbManager.commitAndClose(conn);
     }
+
+    LOGGER.debug("getTasksToCheck() - end");
     return null;
   }
 
@@ -96,7 +105,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
   private static final String SQL__UPDATE_WATCHDOG_WEBSITE_SET_LASTVERIFIED_BY_WEBSITE_ID = "UPDATE watchdog_website SET lastverified = UTC_TIMESTAMP() WHERE website_id = ?";
   private static final String SQL__UPDATE_WATCHDOG_WEBSITE_LOG_SET_LASTENCOUNTERED_BY_WEBSITE_ID = "UPDATE watchdog_website_log SET last_encountered = UTC_TIMESTAMP() WHERE website_id = ?";
   private static final String SQL__SELECT_WATCHDOG_WEBSITE_LOG_BY_WEBSITE_ID = "SELECT id, return_status_code, return_status_text FROM watchdog_website_log WHERE website_id = ? ORDER BY last_encountered DESC";
-  private static final String SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG = "INSERT INTO watchdog_website_log(website_id, first_encountered,last_encountered,return_status_code,return_status_text VALUES(? ,UTC_TIMESTAMP(),UTC_TIMESTAMP(), ?, ?)";
+  private static final String SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG = "INSERT INTO watchdog_website_log(website_id, first_encountered,last_encountered,return_status_code,return_status_text) VALUES(? ,UTC_TIMESTAMP(),UTC_TIMESTAMP(), ?, ?)";
 
   /*
    * SELECT id, return_status_code, return_status_text
@@ -110,23 +119,26 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
    */
   @Override
   public void storeResult(WatchDogCheck checkresult) {
+    LOGGER.debug("storeResult(WatchDogCheck) - start");
+
     // set datasource as class variable if not already set
     if (!checkDataSource()) {
+      LOGGER.debug("storeResult(WatchDogCheck) - end");
       return;
     }
 
     // TODO check if the object contains as source the name "watchdog_website"
 
     // database connection object
-    Connection DBconnection = null;
+    Connection conn = null;
 
     try {
-      DBconnection = DbManager.getConnection(dataSource);
+      conn = DbManager.getConnection(dataSource);
       /*
        * UPDATE watchdog_website SET lastverified = UTC_TIMESTAMP() WHERE
        * website_id = ? ;
        */
-      try (PreparedStatement statement = DBconnection
+      try (PreparedStatement statement = conn
           .prepareStatement(SQL__UPDATE_WATCHDOG_WEBSITE_SET_LASTVERIFIED_BY_WEBSITE_ID)) {
         statement.setInt(1, checkresult.getReferenceId());
         statement.executeUpdate();
@@ -141,7 +153,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
        * FROM watchdog_website_log WHERE website_id = ? ORDER BY
        * last_encountered DESC LIMIT 1 ;
        */
-      try (PreparedStatement watchdogWebsiteLogPS = DBconnection
+      try (PreparedStatement watchdogWebsiteLogPS = conn
           .prepareStatement(SQL__SELECT_WATCHDOG_WEBSITE_LOG_BY_WEBSITE_ID);) {
         watchdogWebsiteLogPS.setInt(1, checkresult.getReferenceId());
 
@@ -160,7 +172,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
                * UPDATE watchdog_website_log SET last_encountered =
                * UTC_TIMESTAMP() WHERE id = ?;
                */
-              try (PreparedStatement statement = DBconnection
+              try (PreparedStatement statement = conn
                   .prepareStatement(SQL__UPDATE_WATCHDOG_WEBSITE_LOG_SET_LASTENCOUNTERED_BY_WEBSITE_ID);) {
                 statement.setInt(1, lastStatusID);
                 statement.executeUpdate();
@@ -174,7 +186,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
                * last_encountered,return_status_code,return_status_text)
                * VALUES(null, ? ,UTC_TIMESTAMP(),UTC_TIMESTAMP(), ?, ?) ;
                */
-              try (PreparedStatement statement = DBconnection.prepareStatement(SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG);) {
+              try (PreparedStatement statement = conn.prepareStatement(SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG);) {
                 statement.setInt(1, checkresult.getReferenceId());
                 statement.setString(2, checkresult.getResponseCode());
                 statement.setString(3, checkresult.getResponseText());
@@ -197,7 +209,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
              * ,return_status_code,return_status_text) VALUES(null, ?
              * ,UTC_TIMESTAMP(),UTC_TIMESTAMP(), ?, ?) ;
              */
-            try (PreparedStatement statement = DBconnection.prepareStatement(SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG);) {
+            try (PreparedStatement statement = conn.prepareStatement(SQL__INSERT_INTO_WATCHDOG_WEBSITE_LOG);) {
               statement.setInt(1, checkresult.getReferenceId());
               statement.setString(2, checkresult.getResponseCode());
               statement.setString(3, checkresult.getResponseText());
@@ -214,15 +226,19 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
             }
 
           }
+
+          LOGGER.debug("storeResult(WatchDogCheck) - end");
           return;
         }
       }
     } catch (Exception e) {
-      DbManager.rollbackAndClose(DBconnection);
-      logger.error("Error in SBS_WatchDog.DAO_watchdog_website.storeResult", e);
+      DbManager.rollbackAndClose(conn);
+      LOGGER.error("Error in SBS_WatchDog.DAO_watchdog_website.storeResult", e);
     } finally {
-      DbManager.commitAndClose(DBconnection);
+      DbManager.commitAndClose(conn);
     }
+
+    LOGGER.debug("storeResult(WatchDogCheck) - end");
     return;
   }
 }

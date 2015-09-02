@@ -4,12 +4,15 @@
 package com.github.xsavikx.websitemonitor.servlet;
 
 import java.util.Timer;
+import java.util.concurrent.TimeUnit;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
+
+import org.apache.log4j.Logger;
 
 import com.github.xsavikx.websitemonitor.constants.ApplicationConstants;
 import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
@@ -24,6 +27,8 @@ import com.github.xsavikx.websitemonitor.timertasks.MonitorTask;
  * @version July 2009
  */
 public class StartupServlet extends javax.servlet.http.HttpServlet implements javax.servlet.Servlet {
+  private static final Logger LOGGER = Logger.getLogger(StartupServlet.class);
+
   static final long serialVersionUID = 1L;
 
   /**
@@ -33,10 +38,13 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
    */
   @Override
   public void init() throws ServletException {
+    LOGGER.debug("init() - start");
+
     initInternalClasses();
 
     // notify administrator application has started
-    Mailer.sendMail("Admin", "Starting PageWatch application...", "Starting PageWatch application");
+    LOGGER.info("Sending e-mail to administrator about starting WatchDog application");
+    Mailer.sendMail("Admin", "Starting WatchDog application...", "Starting WatchDog application");
     Timer timeIt = new Timer();
 
     /**
@@ -45,46 +53,64 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
      */
     MonitorTask monitor = new MonitorTask();
     timeIt = new Timer();
-    timeIt.schedule(monitor, 0, 300000); // run once every 5 minutes
+    long threeSeconds = TimeUnit.SECONDS.toMillis(3);
+    long fiveMinutes = TimeUnit.MINUTES.toMillis(3);
+    timeIt.schedule(monitor, threeSeconds, fiveMinutes);
 
     /**
      * Start master thread to run typically once every 10 minutes
      */
     // timeIt.schedule(new timertasks.MasterTask(monitor), 10000, (10*1000)); //
     // testing 10 seconds
-    timeIt.schedule(new MasterTask(monitor), 10000, ApplicationConstants.mainTaskInterval);
+    timeIt.schedule(new MasterTask(monitor), TimeUnit.SECONDS.toMillis(5), ApplicationConstants.mainTaskInterval);
+
+    LOGGER.debug("init() - end");
   }
 
   private void initDatabaseRoutines() {
+    LOGGER.debug("initDatabaseRoutines() - start");
+
+    LOGGER.info("Initializing database routines");
     try {
       Context initialContext = new InitialContext();
       try {
         for (DatabaseRoutine r : DatabaseRoutine.values()) {
-          DatabaseRoutine res = (DatabaseRoutine) initialContext.lookup("java:comp/env/databaseRoutine/"
-              + r.getSource());
+          initialContext.lookup("java:comp/env/databaseRoutine/" + r.getSource());
         }
       } catch (Exception e) {
         // ignore
       }
     } catch (NamingException e1) {
-      // TODO Auto-generated catch block
-      e1.printStackTrace();
+      // ignore
     }
 
+    LOGGER.debug("initDatabaseRoutines() - end");
   }
 
   private void initInternalClasses() {
+    LOGGER.debug("initInternalClasses() - start");
+    LOGGER.info("Initializing internal classes");
     initApplicationConstants(getServletContext());
     initMailer();
     initDatabaseRoutines();
+
+    LOGGER.debug("initInternalClasses() - end");
   }
 
   private void initMailer() {
+    LOGGER.debug("initMailer() - start");
+
+    LOGGER.info("Initializing Mailer");
     Mailer.initialise(ApplicationConstants.emailMethod, ApplicationConstants.fromAdress,
         ApplicationConstants.emailUsername, ApplicationConstants.emailPassword, ApplicationConstants.toAdress);
+
+    LOGGER.debug("initMailer() - end");
   }
 
   private void initApplicationConstants(ServletContext context) {
+    LOGGER.debug("initApplicationConstants(ServletContext) - start");
+
+    LOGGER.info("Initializing application constants");
     ApplicationConstants.emailMethod = context.getInitParameter("email_method");
     ApplicationConstants.toAdress = context.getInitParameter("toadress");
     ApplicationConstants.fromAdress = context.getInitParameter("fromadress");
@@ -92,6 +118,8 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
     ApplicationConstants.emailPassword = context.getInitParameter("emailpassword");
     ApplicationConstants.delayBetweenRecord = Integer.valueOf((context.getInitParameter("delayBetweenRecord")));
     ApplicationConstants.mainTaskInterval = Integer.valueOf((context.getInitParameter("mainTaskInterval")));
+
+    LOGGER.debug("initApplicationConstants(ServletContext) - end");
   }
 
 }

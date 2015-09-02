@@ -1,5 +1,7 @@
 package com.github.xsavikx.websitemonitor.db.model;
 
+import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
+
 /**
  *
  */
@@ -8,9 +10,9 @@ public class WatchDogCheck extends AbstractEntity {
   /**
    * DatabaseRoutine source
    */
-  private String source;
+  private DatabaseRoutine source;
   private int referenceId;
-  private String checkType;
+  private WatchDogCheckType checkType;
   private String urlToCheck;
   private String urlToFind;
   private String contentToFind;
@@ -23,11 +25,11 @@ public class WatchDogCheck extends AbstractEntity {
   private boolean isContentFound;
   private boolean isTimestampFound;
 
-  public String getSource() {
+  public DatabaseRoutine getSource() {
     return source;
   }
 
-  public void setSource(String source) {
+  public void setSource(DatabaseRoutine source) {
     this.source = source;
   }
 
@@ -39,11 +41,11 @@ public class WatchDogCheck extends AbstractEntity {
     this.referenceId = referenceId;
   }
 
-  public String getCheckType() {
+  public WatchDogCheckType getCheckType() {
     return checkType;
   }
 
-  public void setCheckType(String checkType) {
+  public void setCheckType(WatchDogCheckType checkType) {
     this.checkType = checkType;
   }
 

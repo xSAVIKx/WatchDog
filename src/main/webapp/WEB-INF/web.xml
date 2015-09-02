@@ -31,13 +31,13 @@
 	</context-param>
 	<context-param>
 		<param-name>delayBetweenRecord</param-name>
-		<param-value>1500</param-value>
-		<description></description>
+		<param-value>1000</param-value>
+		<description>interval between tasks execution in milliseconds</description>
 	</context-param>
 	<context-param>
 		<param-name>mainTaskInterval</param-name>
-		<param-value>3000</param-value>
-		<description></description>
+		<param-value>5000</param-value>
+		<description>interval between main task execution in milliseconds</description>
 	</context-param>
 	<servlet>
 		<servlet-name>StartupServlet</servlet-name>

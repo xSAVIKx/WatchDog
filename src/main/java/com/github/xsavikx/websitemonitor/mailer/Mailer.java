@@ -8,9 +8,8 @@ import java.util.List;
 
 import javax.mail.internet.InternetAddress;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.mail.SimpleEmail;
+import org.apache.log4j.Logger;
 
 /**
  * Utility class Mailer containing a send email method. <br>
@@ -29,12 +28,11 @@ import org.apache.commons.mail.SimpleEmail;
  * 4java = server at 4 java (not tested with this application)<br>
  */
 public class Mailer {
+  private static final Logger LOGGER = Logger.getLogger(Mailer.class);
 
   static SimpleEmail simpleEmail = null;
   static String administrator_email = null;
   static boolean email_available;
-
-  private static Log logger = LogFactory.getLog(Mailer.class);
 
   /**
    * Initialise mailer by setting parameters. <br>
@@ -42,6 +40,8 @@ public class Mailer {
    */
   public static boolean initialise(String email_method, String fromadress, String emailusername, String emailpassword,
       String administrator) {
+    LOGGER.debug("initialise(String, String, String, String, String) - start");
+
     try {
 
       simpleEmail = new SimpleEmail();
@@ -95,12 +95,12 @@ public class Mailer {
       }
 
     } catch (Exception e) {
-      logger.error("Error initialising email utility", e);
-      if (logger.isDebugEnabled()) {
-        e.printStackTrace();
-      }
+      LOGGER.error("initialise(String, String, String, String, String)", e);
+      LOGGER.debug("initialise(String, String, String, String, String) - end");
       return false;
     }
+
+    LOGGER.debug("initialise(String, String, String, String, String) - end");
     return true;
   }
 
@@ -115,16 +115,22 @@ public class Mailer {
    * @return
    */
   public static boolean sendMail(String mailAdress, String subject, String message) {
+    LOGGER.debug("sendMail(String, String, String) - start");
+
     List<String> mailList = new ArrayList<String>();
     if (mailAdress.equals("Admin")) {
       mailList.add(administrator_email);
     } else {
       mailList.add(mailAdress);
     }
-    return sendMail(mailList, subject, message);
+    boolean returnboolean = sendMail(mailList, subject, message);
+    LOGGER.debug("sendMail(String, String, String) - end");
+    return returnboolean;
   }
 
   public static boolean sendMail(List<String> mailList, String subject, String message) {
+    LOGGER.debug("sendMail(List<String>, String, String) - start");
+
     try {
       if (simpleEmail == null) {
         Mailer.initialise("none", "", "", "", "");
@@ -149,15 +155,16 @@ public class Mailer {
         /**
          * Simulate email sending by using a LOG file
          */
-        logger.info("Email not available: " + subject + ";" + message);
+        LOGGER.info("Email not available: " + subject + ";" + message);
       }
     } catch (Exception e) {
-      logger.error("mail error", e);
-      if (logger.isDebugEnabled()) {
-        e.printStackTrace();
-      }
+      LOGGER.error("sendMail(List<String>, String, String)", e);
+
+      LOGGER.debug("sendMail(List<String>, String, String) - end");
       return false;
     }
+
+    LOGGER.debug("sendMail(List<String>, String, String) - end");
     return true;
   }
 }

@@ -4,14 +4,13 @@
 package com.github.xsavikx.websitemonitor.timertasks;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
-import com.github.xsavikx.websitemonitor.helper.Tooler;
 import com.github.xsavikx.websitemonitor.mailer.Mailer;
+import com.github.xsavikx.websitemonitor.timertasks.helper.FeatureHelper;
 
 public class MonitorTask extends TimerTask {
 
@@ -22,13 +21,14 @@ public class MonitorTask extends TimerTask {
 
   // private variable to hold the last run time,
   // used by the page MonitorWatchMaster.jsp
-  private static String lastrun = Tooler.getGMT(new Date());
+  private static String lastrun = FeatureHelper.getCurrentDateTime();
 
   public MonitorTask() {
   }
 
   @Override
   public void run() {
+    LOGGER.debug("run() - start");
 
     try {
       /**
@@ -38,7 +38,7 @@ public class MonitorTask extends TimerTask {
       for (WatchDogCheckTask task : taskList) {
         if (!task.isRunning()) {
           toremove.add(task);
-          System.out.println("task is NOT running" + task.getName());
+          LOGGER.info("Task is NOT running. URL: " + task.getName());
         } else {
           // System.out.println("task="+task.toString());
         }
@@ -49,10 +49,10 @@ public class MonitorTask extends TimerTask {
       // for each task still running display name and starttime
       if (LOGGER.isDebugEnabled()) {
         for (WatchDogCheckTask runningtask : taskList) {
-          System.out.println("Tasks now still running : " + runningtask.scheduledExecutionTime() + "---"
+          LOGGER.info("Tasks now still running : " + runningtask.scheduledExecutionTime() + "---"
               + runningtask.getName());
         }
-        System.out.println("Number of tasks now still running : " + taskList.size());
+        LOGGER.info("Number of tasks now still running : " + taskList.size());
       }
 
       /**
@@ -109,7 +109,7 @@ public class MonitorTask extends TimerTask {
        * update lastrun marker, but only if this run of the thread is
        * successfull
        */
-      lastrun = Tooler.getGMT(new Date());
+      lastrun = FeatureHelper.getCurrentDateTime();
 
       /**
        * If error during a master run then the lastrun marker will not get
@@ -121,14 +121,17 @@ public class MonitorTask extends TimerTask {
        */
     } catch (Exception e) {
       LOGGER.error("Error in SBS_PageWatch monitor thread", e);
-      if (LOGGER.isDebugEnabled()) {
-        e.printStackTrace();
-      }
     }
+
+    LOGGER.debug("run() - end");
   }
 
   public void addTaskToList(WatchDogCheckTask pct) {
+    LOGGER.debug("addTaskToList(WatchDogCheckTask) - start");
+
     taskList.add(pct);
+
+    LOGGER.debug("addTaskToList(WatchDogCheckTask) - end");
   }
 
   /**

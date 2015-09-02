@@ -9,9 +9,13 @@ import javax.naming.RefAddr;
 import javax.naming.Reference;
 import javax.naming.spi.ObjectFactory;
 
+import org.apache.log4j.Logger;
+
 import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
 
 public class DatabaseRoutineFactory implements ObjectFactory {
+  private static final Logger LOGGER = Logger.getLogger(DatabaseRoutineFactory.class);
+
   private static final String SOURCE_ATTRIBUTE_NAME = "source";
   private static final String VALUE_ATTRIBUTE_NAME = "value";
   private static final String OVERRIDE_ATTRIBUTE_NAME = "override";
@@ -20,6 +24,8 @@ public class DatabaseRoutineFactory implements ObjectFactory {
 
   @Override
   public Object getObjectInstance(Object obj, Name name, Context nameCtx, Hashtable<?, ?> environment) throws Exception {
+    LOGGER.debug("getObjectInstance(Object, Name, Context, Hashtable<?,?>) - start");
+
     Reference ref = (Reference) obj;
     Enumeration<RefAddr> addrs = ref.getAll();
     DatabaseRoutine routine = null;
@@ -40,6 +46,8 @@ public class DatabaseRoutineFactory implements ObjectFactory {
     routine = DatabaseRoutine.getBySource(source);
     routine.setOn(isOn);
     routine.setOverride(override);
+
+    LOGGER.debug("getObjectInstance(Object, Name, Context, Hashtable<?,?>) - end");
     return routine;
   }
 }

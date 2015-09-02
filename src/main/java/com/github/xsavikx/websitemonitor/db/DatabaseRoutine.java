@@ -5,11 +5,11 @@ import java.util.Iterator;
 import java.util.Set;
 
 public enum DatabaseRoutine {
-  WatchDogWebsite("watchdog_website"), //
-  WatchDogTimestamp("watchdog_timestamp"), //
-  PunterIndexWebsite("punterindex_website"), //
-  PunterIndexLinkBack("punterindex_linkback"), //
-  PunterIndexContent("punterindex_content");
+  WATCH_DOG_WEBSITE("watchdog_website"), //
+  WATCH_DOG_TIMESTAMP("watchdog_timestamp"), //
+  PUNTER_INDEX_WEBSITE("punterindex_website"), //
+  PUNTER_INDEX_LINKBACK("punterindex_linkback"), //
+  PUNTER_INDEX_CONTENT("punterindex_content");
 
   private String source;
   private boolean isOn = false;

@@ -4,7 +4,6 @@
  */
 package com.github.xsavikx.websitemonitor.timertasks;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -16,8 +15,8 @@ import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
 import com.github.xsavikx.websitemonitor.db.dao.DAOFactory;
 import com.github.xsavikx.websitemonitor.db.dao.WatchDogDAO;
 import com.github.xsavikx.websitemonitor.db.model.WatchDogCheck;
-import com.github.xsavikx.websitemonitor.helper.Tooler;
 import com.github.xsavikx.websitemonitor.mailer.Mailer;
+import com.github.xsavikx.websitemonitor.timertasks.helper.FeatureHelper;
 
 public class MasterTask extends TimerTask {
 
@@ -32,11 +31,11 @@ public class MasterTask extends TimerTask {
   MonitorTask monitor;
 
   // timestamp of last run of master thread
-  private static String lastRun = Tooler.getGMT(new Date());
+  private static String lastRun = FeatureHelper.getCurrentDateTime();
 
   @Override
   public void run() {
-    LOGGER.debug(Tooler.getGMT(new Date()) + ":start to check........");
+    LOGGER.debug(FeatureHelper.getCurrentDateTime() + ":start to check........");
 
     /**
      * Read database for pages to be checked in the next 10 minutes and for each
@@ -60,12 +59,16 @@ public class MasterTask extends TimerTask {
       for (DatabaseRoutine routine : DatabaseRoutine.getEnabledDatabaseRoutines()) {
         WatchDogDAO dao = DAOFactory.getInstance().getDAOBySource(routine);
         List<WatchDogCheck> tasksToCheck = dao.getTasksToCheck();
+        if (tasksToCheck.size() > 0) {
+          LOGGER.info("Checking " + routine + " database routine");
+        }
         for (WatchDogCheck check : tasksToCheck) {
-          Timer timeIt = new Timer();
-          WatchDogCheckTask pct = new WatchDogCheckTask(check, timeIt);
-          monitor.addTaskToList(pct);
-          timeIt.schedule(pct, delay); // tested repeatedly, should never happen
-                                       // as cancel() is in place
+          Timer timeIt = new Timer(check.getCheckType().getDbAlias() + "#" + check.getUrlToCheck() + "#" + "Timer");
+          WatchDogCheckTask checkTask = new WatchDogCheckTask(check, timeIt);
+          monitor.addTaskToList(checkTask);
+          timeIt.schedule(checkTask, delay); // tested repeatedly, should never
+                                             // happen
+          // as cancel() is in place
           delay += ApplicationConstants.delayBetweenRecord;
         }
       }
@@ -74,7 +77,7 @@ public class MasterTask extends TimerTask {
        * update lastrun marker, but only if this run of the thread is
        * successfull
        */
-      lastRun = Tooler.getGMT(new Date());
+      lastRun = FeatureHelper.getCurrentDateTime();
 
       /**
        * If error during a master run then the lastrun marker will not get
@@ -85,20 +88,17 @@ public class MasterTask extends TimerTask {
        */
     } catch (Exception e) {
       LOGGER.error("Error during processing of the Master Thread", e);
-      if (LOGGER.isDebugEnabled()) {
-        e.printStackTrace();
-      }
       // attempt to notify administrator
       try {
         Mailer.sendMail("Admin", "Error during master task", "Error during run of master task for SBS_PageWatch.");
       } catch (Exception ee) {
+        LOGGER.warn("run() - exception ignored", ee);
+
         // no a lot to do if this goes wrong
-        if (LOGGER.isDebugEnabled()) {
-          ee.printStackTrace();
-        }
       }
     }
 
+    LOGGER.debug("run() - end");
   } // end run
 
   /**
