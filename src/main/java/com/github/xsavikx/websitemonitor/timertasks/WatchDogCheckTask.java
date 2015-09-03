@@ -122,8 +122,7 @@ public class WatchDogCheckTask extends TimerTask {
 
     String pageContent = FeatureHelper.getPageContent(response);
     String timestamp = StringUtils.substringBetween(pageContent, "class=\"watchdog_timestamp\">", "</span>");
-    // watchDogCheck.setTimestampFound(!FeatureHelper.isOld(timestamp,
-    // watchDogCheck.getMaximumAge()));
+    watchDogCheck.setTimestampFound(!FeatureHelper.isOld(timestamp, watchDogCheck.getMaximumAge()));
 
     LOGGER.debug("checkTimestampAvailable(WatchDogCheck, HttpResponse) - end");
   }

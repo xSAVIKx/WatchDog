@@ -1,7 +1,6 @@
 package com.github.xsavikx.websitemonitor.timertasks.helper;
 
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.codec.Charsets;
 import org.apache.http.HttpResponse;
@@ -17,8 +16,18 @@ public final class FeatureHelper {
   private static final Logger LOGGER = Logger.getLogger(FeatureHelper.class);
 
   private static final String TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm:ss";
-  private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormat.forPattern(TIMESTAMP_FORMAT);
+  private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormat.forPattern(TIMESTAMP_FORMAT)
+      .withZoneUTC();
 
+  private FeatureHelper() {
+    // private constructor
+  }
+
+  /**
+   * Get current time in "yyyy-MM-dd HH:mm:ss" format with UTC timezone
+   * 
+   * @return formated current time
+   */
   public static String getCurrentDateTime() {
     return new DateTime().toString(TIMESTAMP_FORMATTER);
   }
@@ -34,11 +43,12 @@ public final class FeatureHelper {
    */
   public static boolean isOld(String timestamp, int maximumAge) {
     LOGGER.debug("isOld(String, int) - start");
-    DateTime timestampDateTime = DateTime.parse(timestamp, TIMESTAMP_FORMATTER).toDateTime(DateTimeZone.UTC);
-    long timestampInMilis = timestampDateTime.getMillis() + TimeUnit.SECONDS.toMillis(maximumAge);
-    long currentTimeUTC = DateTime.now(DateTimeZone.UTC).getMillis();
-    boolean returnboolean = timestampInMilis > currentTimeUTC;
+    DateTime timestampDateTime = DateTime.parse(timestamp, TIMESTAMP_FORMATTER);
+    DateTime now = DateTime.now(DateTimeZone.UTC);
+    long interval = (now.getMillis() - timestampDateTime.getMillis()) / 1000;
+    boolean returnboolean = interval > maximumAge;
     LOGGER.debug("isOld(String, int) - end");
+
     return returnboolean;
   }
 

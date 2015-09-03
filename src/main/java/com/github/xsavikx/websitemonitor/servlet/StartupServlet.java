@@ -6,9 +6,6 @@ package com.github.xsavikx.websitemonitor.servlet;
 import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
@@ -67,21 +64,15 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
     LOGGER.debug("init() - end");
   }
 
-  private void initDatabaseRoutines() {
+  private void initDatabaseRoutines(ServletContext context) {
     LOGGER.debug("initDatabaseRoutines() - start");
 
     LOGGER.info("Initializing database routines");
-    try {
-      Context initialContext = new InitialContext();
-      try {
-        for (DatabaseRoutine r : DatabaseRoutine.values()) {
-          initialContext.lookup("java:comp/env/databaseRoutine/" + r.getSource());
-        }
-      } catch (Exception e) {
-        // ignore
+    for (DatabaseRoutine r : DatabaseRoutine.values()) {
+      String value = context.getInitParameter(r.getSource());
+      if (DatabaseRoutine.IS_ON_VALUE_PATTERN.equalsIgnoreCase(value)) {
+        r.setOn(true);
       }
-    } catch (NamingException e1) {
-      // ignore
     }
 
     LOGGER.debug("initDatabaseRoutines() - end");
@@ -90,9 +81,10 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
   private void initInternalClasses() {
     LOGGER.debug("initInternalClasses() - start");
     LOGGER.info("Initializing internal classes");
-    initApplicationConstants(getServletContext());
+    ServletContext context = getServletContext();
+    initApplicationConstants(context);
     initMailer();
-    initDatabaseRoutines();
+    initDatabaseRoutines(context);
 
     LOGGER.debug("initInternalClasses() - end");
   }

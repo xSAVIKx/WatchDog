@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context docBase="WatchDog" path="/WatchDog" reloadable="true">
+  <WatchedResource>WEB-INF/web.xml</WatchedResource>
+  <Resource name="jdbc/website_monitor" auth="Container" type="javax.sql.DataSource" maxActive="100" maxIdle="30"
+    maxWait="10000" username="website_monitor" password="K2XdPszqy83XmCJM" driverClassName="com.mysql.jdbc.Driver"
+    url="jdbc:mysql://localhost:3306/website_monitor" />
+  <!-- email address to be used to send out error messages -->
+  <Parameter name="email_method" value="yahoo" override="false" />
+  <!-- <Parameter name="toadress" value="ebo37@yahoo.co.uk" override="false" /> <Parameter name="fromadress" value="ebo37@yahoo.co.uk" 
+    override="false" /> <Parameter name="emailusername" value="ebo37@yahoo.co.uk" override="false" /> <Parameter name="emailpassword" 
+    value="motoguzzi" override="false" /> -->
+  <!-- delay between 2 check tasks, to allow for a little spread of resource usage, typical 100 milliseconds -->
+  <Parameter name="delayBetweenRecord" value="100" override="false" />
+  <!-- frequency of master thread, typical 10 minutes = 600 seconds = 600000 milliseconds -->
+  <Parameter name="mainTaskInterval" value="600000" override="false" />
+  <!-- determines what DAO's to use with the currently installed instance -->
+  <!-- existence of DAO objects may be hard-coded -->
+  <!-- switching them on/off is sufficient as configuration -->
+  <Parameter name="DAO_watchdog_website" value="on" override="false" />
+  <Parameter name="DAO_watchdog_timestamp" value="on" override="false" />
+  <Parameter name="DAO_punterindex_website" value="off" override="false" />
+  <Parameter name="DAO_punterindex_linkback" value="off" override="false" />
+  <Parameter name="DAO_punterindex_content" value="off" override="false" />
+</Context>

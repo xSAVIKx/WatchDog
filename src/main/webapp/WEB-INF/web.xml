@@ -1,84 +1,22 @@
-<!DOCTYPE web-app PUBLIC
- "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
- "http://java.sun.com/dtd/web-app_2_3.dtd" >
-
-<web-app>
-	<display-name>Archetype Created Web Application</display-name>
-	<context-param>
-		<param-name>email_method</param-name>
-		<param-value>""</param-value>
-		<description></description>
-	</context-param>
-	<context-param>
-		<param-name>toadress</param-name>
-		<param-value>""</param-value>
-		<description></description>
-	</context-param>
-	<context-param>
-		<param-name>fromadress</param-name>
-		<param-value>""</param-value>
-		<description></description>
-	</context-param>
-	<context-param>
-		<param-name>emailusername</param-name>
-		<param-value>""</param-value>
-		<description></description>
-	</context-param>
-	<context-param>
-		<param-name>emailpassword</param-name>
-		<param-value>""</param-value>
-		<description></description>
-	</context-param>
-	<context-param>
-		<param-name>delayBetweenRecord</param-name>
-		<param-value>1000</param-value>
-		<description>interval between tasks execution in milliseconds</description>
-	</context-param>
-	<context-param>
-		<param-name>mainTaskInterval</param-name>
-		<param-value>5000</param-value>
-		<description>interval between main task execution in milliseconds</description>
-	</context-param>
-	<servlet>
-		<servlet-name>StartupServlet</servlet-name>
-		<display-name>StartupServlet</display-name>
-		<description>Init point of application</description>
-		<servlet-class>com.github.xsavikx.websitemonitor.servlet.StartupServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>StartupServlet</servlet-name>
-		<url-pattern>/</url-pattern>
-	</servlet-mapping>
-
-	<resource-env-ref>
-		<description>
-			Configuration for DatabaseRoutine-watchdog_timestamp.
-		</description>
-		<resource-env-ref-name>
-			databaseRoutine/watchdog_website
-		</resource-env-ref-name>
-		<resource-env-ref-type>
-			com.github.xsavikx.websitemonitor.db.DatabaseRoutine
-		</resource-env-ref-type>
-	</resource-env-ref>
-	<resource-env-ref>
-		<description>
-			Configuration for DatabaseRoutine-watchdog_timestamp.
-		</description>
-		<resource-env-ref-name>
-			databaseRoutine/watchdog_timestamp
-		</resource-env-ref-name>
-		<resource-env-ref-type>
-			com.github.xsavikx.websitemonitor.db.DatabaseRoutine
-		</resource-env-ref-type>
-	</resource-env-ref>
-	<resource-ref>
-		<description>DB Connection</description>
-		<res-ref-name>jdbc/website_monitor</res-ref-name>
-		<res-type>javax.sql.DataSource</res-type>
-		<res-auth>Container</res-auth>
-	</resource-ref>
-
-
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee"
+  xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" version="3.0" xmlns="http://xmlns.jcp.org/xml/ns/javaee">
+  <display-name>Archetype Created Web Application</display-name>
+  <servlet>
+    <servlet-name>StartupServlet</servlet-name>
+    <display-name>StartupServlet</display-name>
+    <description>Init point of application</description>
+    <servlet-class>com.github.xsavikx.websitemonitor.servlet.StartupServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>StartupServlet</servlet-name>
+    <url-pattern>/</url-pattern>
+  </servlet-mapping>
+  <resource-ref>
+    <description>DB Connection</description>
+    <res-ref-name>jdbc/website_monitor</res-ref-name>
+    <res-type>javax.sql.DataSource</res-type>
+    <res-auth>Container</res-auth>
+  </resource-ref>
 </web-app>

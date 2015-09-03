@@ -5,15 +5,16 @@ import java.util.Iterator;
 import java.util.Set;
 
 public enum DatabaseRoutine {
-  WATCH_DOG_WEBSITE("watchdog_website"), //
-  WATCH_DOG_TIMESTAMP("watchdog_timestamp"), //
-  PUNTER_INDEX_WEBSITE("punterindex_website"), //
-  PUNTER_INDEX_LINKBACK("punterindex_linkback"), //
-  PUNTER_INDEX_CONTENT("punterindex_content");
+  WATCH_DOG_WEBSITE("DAO_watchdog_website"), //
+  WATCH_DOG_TIMESTAMP("DAO_watchdog_timestamp"), //
+  PUNTER_INDEX_WEBSITE("DAO_punterindex_website"), //
+  PUNTER_INDEX_LINKBACK("DAO_punterindex_linkback"), //
+  PUNTER_INDEX_CONTENT("DAO_punterindex_content");
+
+  public static final String IS_ON_VALUE_PATTERN = "on";
 
   private String source;
   private boolean isOn = false;
-  private boolean isOverride = false;
 
   private DatabaseRoutine(String source) {
     this.source = source;
@@ -49,13 +50,5 @@ public enum DatabaseRoutine {
       }
     }
     throw new IllegalArgumentException("No DatabaseRoutine with source=" + source + " was found");
-  }
-
-  public boolean isOverride() {
-    return isOverride;
-  }
-
-  public void setOverride(boolean isOverride) {
-    this.isOverride = isOverride;
   }
 }
