@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Context docBase="WatchDog" path="/WatchDog" reloadable="true">
   <WatchedResource>WEB-INF/web.xml</WatchedResource>
-  <Resource name="jdbc/website_monitor" auth="Container" type="javax.sql.DataSource" maxActive="100" maxIdle="30"
+  <Resource name="jdbc/WatchDog" auth="Container" type="javax.sql.DataSource" maxActive="100" maxIdle="30"
     maxWait="10000" username="website_monitor" password="K2XdPszqy83XmCJM" driverClassName="com.mysql.jdbc.Driver"
     url="jdbc:mysql://localhost:3306/website_monitor" />
   <!-- email address to be used to send out error messages -->

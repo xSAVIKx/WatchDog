@@ -9,10 +9,6 @@
     <servlet-class>com.github.xsavikx.websitemonitor.servlet.StartupServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
-  <servlet-mapping>
-    <servlet-name>StartupServlet</servlet-name>
-    <url-pattern>/</url-pattern>
-  </servlet-mapping>
   <resource-ref>
     <description>DB Connection</description>
     <res-ref-name>jdbc/website_monitor</res-ref-name>

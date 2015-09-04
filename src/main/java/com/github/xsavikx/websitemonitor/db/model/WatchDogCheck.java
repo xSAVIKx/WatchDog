@@ -2,9 +2,6 @@ package com.github.xsavikx.websitemonitor.db.model;
 
 import com.github.xsavikx.websitemonitor.db.DatabaseRoutine;
 
-/**
- *
- */
 public class WatchDogCheck extends AbstractEntity {
 
   /**

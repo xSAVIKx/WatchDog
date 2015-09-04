@@ -25,46 +25,38 @@ import com.github.xsavikx.websitemonitor.db.dao.DAOFactory;
 import com.github.xsavikx.websitemonitor.db.model.WatchDogCheck;
 import com.github.xsavikx.websitemonitor.timertasks.helper.FeatureHelper;
 
-/**
- * Task to check a webpage.
- */
 public class WatchDogCheckTask extends TimerTask {
   private static final Logger LOGGER = Logger.getLogger(WatchDogCheckTask.class);
   private boolean running = false;
   private WatchDogCheck watchDogCheck;
-  public Timer timeIt;
+  private Timer timeIt;
   private HttpClient client;
 
   private static final String USER_AGENT = "Mozilla/5.0";
-
-  // int runcounter = 0;
 
   public WatchDogCheckTask(WatchDogCheck watchDogCheck, Timer timeIt) {
     running = true;
     this.watchDogCheck = watchDogCheck;
     this.timeIt = timeIt;
-    client = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
+    client = prepareHttpClient();
+  }
+
+  private HttpClient prepareHttpClient() {
+    return HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
   }
 
   @Override
   public void run() {
     LOGGER.debug("run() - start");
-
     checkResource(watchDogCheck);
     DAOFactory.getInstance().getDAOBySource(watchDogCheck.getSource()).storeResult(watchDogCheck);
-    running = false;
-    timeIt.cancel();
     cancel();
-
     LOGGER.debug("run() - end");
   }
 
   private void checkResource(WatchDogCheck check) {
     LOGGER.debug("checkResource(WatchDogCheck) - start");
-
-    HttpGet get = new HttpGet(check.getUrlToCheck());
-    get.setHeader("User-Agent", USER_AGENT);
-    get.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    HttpGet get = prepareGetMethod(check.getUrlToCheck());
     int statusCode = WatchDogCheckExceptions.UNKNOWN_EXCEPTION.getCode();
     String responseText = WatchDogCheckExceptions.UNKNOWN_EXCEPTION.getMessage();
     HttpResponse response = null;
@@ -102,6 +94,13 @@ public class WatchDogCheckTask extends TimerTask {
     LOGGER.debug("checkResource(WatchDogCheck) - end");
   }
 
+  private HttpGet prepareGetMethod(String urlToCheck) {
+    HttpGet get = new HttpGet(urlToCheck);
+    get.setHeader("User-Agent", USER_AGENT);
+    get.setHeader("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+    return get;
+  }
+
   private void processSpecificFeatures(WatchDogCheck watchDogCheck, HttpResponse response) {
     LOGGER.debug("processSpecificFeatures(WatchDogCheck, HttpResponse) - start");
     switch (watchDogCheck.getCheckType()) {
@@ -127,6 +126,14 @@ public class WatchDogCheckTask extends TimerTask {
     LOGGER.debug("checkTimestampAvailable(WatchDogCheck, HttpResponse) - end");
   }
 
+  @Override
+  public boolean cancel() {
+    boolean result = super.cancel();
+    timeIt.cancel();
+    setRunning(false);
+    return result;
+  }
+
   public boolean isRunning() {
     return running;
   }
@@ -135,12 +142,8 @@ public class WatchDogCheckTask extends TimerTask {
     running = setit;
   }
 
-  public String getName() {
-    LOGGER.debug("getName() - start");
-
-    String returnString = watchDogCheck.getUrlToCheck();
-    LOGGER.debug("getName() - end");
-    return returnString;
+  public String getTaskUrl() {
+    return watchDogCheck.getUrlToCheck();
   }
 
 }

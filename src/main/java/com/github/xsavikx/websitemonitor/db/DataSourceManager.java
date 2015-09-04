@@ -11,7 +11,7 @@ public final class DataSourceManager {
   private static final Logger LOGGER = Logger.getLogger(DataSourceManager.class);
 
   private static DataSource dataSource;
-  private static final String LOOKUP_LOCATION = "java:comp/env/jdbc/website_monitor";
+  private static final String LOOKUP_LOCATION = "java:comp/env/jdbc/WatchDog";
 
   public static DataSource getDataSource() {
     LOGGER.debug("getDataSource() - start");

@@ -61,15 +61,19 @@ public class MasterTask extends TimerTask {
         List<WatchDogCheck> tasksToCheck = dao.getTasksToCheck();
         if (tasksToCheck.size() > 0) {
           LOGGER.info("Checking " + routine + " database routine");
-        }
-        for (WatchDogCheck check : tasksToCheck) {
-          Timer timeIt = new Timer(check.getCheckType().getDbAlias() + "#" + check.getUrlToCheck() + "#" + "Timer");
-          WatchDogCheckTask checkTask = new WatchDogCheckTask(check, timeIt);
-          monitor.addTaskToList(checkTask);
-          timeIt.schedule(checkTask, delay); // tested repeatedly, should never
-                                             // happen
-          // as cancel() is in place
-          delay += ApplicationConstants.delayBetweenRecord;
+          for (WatchDogCheck check : tasksToCheck) {
+            Timer timeIt = new Timer(check.getCheckType().getDbAlias() + "#" + check.getUrlToCheck() + "#" + "Timer");
+            WatchDogCheckTask checkTask = new WatchDogCheckTask(check, timeIt);
+            monitor.addTaskToList(checkTask);
+            timeIt.schedule(checkTask, delay); // tested repeatedly, should
+                                               // never
+                                               // happen
+            // as cancel() is in place
+            delay += ApplicationConstants.delayBetweenRecord;
+          }
+          LOGGER.info("Created " + tasksToCheck.size() + " check tasks for " + routine + " database routine");
+        } else {
+          LOGGER.info("Nothing to check for " + routine + " database routine");
         }
       }
 

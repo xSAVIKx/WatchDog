@@ -10,7 +10,7 @@ public class DAOFactory {
   private static DAOFactory instance;
 
   private DAOFactory() {
-
+    //
   }
 
   public static DAOFactory getInstance() {

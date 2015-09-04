@@ -4,6 +4,7 @@
 package com.github.xsavikx.websitemonitor.timertasks;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -13,15 +14,14 @@ import com.github.xsavikx.websitemonitor.mailer.Mailer;
 import com.github.xsavikx.websitemonitor.timertasks.helper.FeatureHelper;
 
 public class MonitorTask extends TimerTask {
-
   private static Logger LOGGER = Logger.getLogger(MonitorTask.class);
-
-  // class variable, remains in existence between runs
+  private static final int MAXIMUM_TASKS_AMOUNT = 125;
+  private static final long FIFTEEN_MINUTES_IN_MILLISECONDS = 900_000;
   private List<WatchDogCheckTask> taskList = new ArrayList<WatchDogCheckTask>();
 
   // private variable to hold the last run time,
   // used by the page MonitorWatchMaster.jsp
-  private static String lastrun = FeatureHelper.getCurrentDateTime();
+  private String lastRun = FeatureHelper.getCurrentDateTime();
 
   public MonitorTask() {
   }
@@ -31,85 +31,15 @@ public class MonitorTask extends TimerTask {
     LOGGER.debug("run() - start");
 
     try {
-      /**
-       * Remove tasks from the taskList that are no longer running
-       */
-      List<WatchDogCheckTask> toremove = new ArrayList<WatchDogCheckTask>();
-      for (WatchDogCheckTask task : taskList) {
-        if (!task.isRunning()) {
-          toremove.add(task);
-          LOGGER.info("Task is NOT running. URL: " + task.getName());
-        } else {
-          // System.out.println("task="+task.toString());
-        }
-      }
-      for (WatchDogCheckTask removeit : toremove) {
-        taskList.remove(removeit);
-      }
-      // for each task still running display name and starttime
-      if (LOGGER.isDebugEnabled()) {
-        for (WatchDogCheckTask runningtask : taskList) {
-          LOGGER.info("Tasks now still running : " + runningtask.scheduledExecutionTime() + "---"
-              + runningtask.getName());
-        }
-        LOGGER.info("Number of tasks now still running : " + taskList.size());
-      }
-
-      /**
-       * If at any given time there are more than 125 tasks running then there
-       * are probably a number of tasks stuck in an error or there are simply
-       * too many being scheduled at the same time.
-       * 
-       * Report situation to administrator and remove all current tasks making
-       * sure there's room for the most important ones and this application does
-       * not interfere with Tomcat overall by becoming a runaway application.
-       */
-      if (taskList.size() > 125) {
-        String message = "";
-        for (WatchDogCheckTask task : taskList) {
-          message = message + "Time:" + task.scheduledExecutionTime() + "....." + task.getName() + "\n";
-        }
-        Mailer.sendMail("Admin", "WARNING PageWatch exceeded 125 tasks", message);
-        for (WatchDogCheckTask task : taskList) {
-          message = message + "Time:" + task.scheduledExecutionTime() + "....." + task.getName() + "\n";
-          // first cancel Timer
-          task.timeIt.cancel();
-          // cancel task to run again, or even run once
-          task.cancel();
-          // set to not running so it gets removed on next monitor run
-          task.setRunning(false);
-        }
-      }
-
-      /**
-       * TODO , verify duration of each task, if running longer than say 15
-       * minutes then report and kill that task
-       * 
-       * NOTE it is not actually possible to kill a task, it always runs to
-       * completion of the run() method, so if it is stuck it will remain stuck.
-       * 
-       * A possible alternative would be to interrupt the thread running behind
-       * the Timer if this should become a problem then al alternative would be
-       * to use threads rather than timertasks
-       */
-      // for ( PageCheckTask task : taskList ) {
-      //
-      // retrieve task.scheduledExecutionTime();
-      // check if it is older than 15 minutes
-      //
-      // mailer.Mailer.sendMail("Admin", "WARNING task older than 15 minutes",
-      // task.getName());
-      // task.timeIt.cancel();
-      // task.cancel();
-      // task.setRunning(false);
-      //
-      // }
-
+      removeFinishedTasks();
+      displayActiveTasks();
+      preventServerCrash();
+      checkStuckTasks();
       /**
        * update lastrun marker, but only if this run of the thread is
        * successfull
        */
-      lastrun = FeatureHelper.getCurrentDateTime();
+      lastRun = FeatureHelper.getCurrentDateTime();
 
       /**
        * If error during a master run then the lastrun marker will not get
@@ -126,12 +56,70 @@ public class MonitorTask extends TimerTask {
     LOGGER.debug("run() - end");
   }
 
+  /**
+   * Print still running tasks
+   */
+  private void displayActiveTasks() {
+    for (WatchDogCheckTask runningtask : taskList) {
+      LOGGER.info("Tasks now still running : " + runningtask.scheduledExecutionTime() + "---"
+          + runningtask.getTaskUrl());
+    }
+    LOGGER.info("Number of tasks now still running : " + taskList.size());
+  }
+
+  /**
+   * Remove tasks from the taskList that are no longer running
+   */
+  private void removeFinishedTasks() {
+    Iterator<WatchDogCheckTask> iterator = taskList.iterator();
+    while (iterator.hasNext()) {
+      WatchDogCheckTask task = iterator.next();
+      if (!task.isRunning()) {
+        iterator.remove();
+        LOGGER.info("Task is NOT running. URL: " + task.getTaskUrl());
+      } else {
+        LOGGER.info("Task is running. URL: " + task.getTaskUrl());
+      }
+    }
+  }
+
+  /**
+   * If at any given time there are more than 125 tasks running then there are
+   * probably a number of tasks stuck in an error or there are simply too many
+   * being scheduled at the same time.
+   * 
+   * Report situation to administrator and remove all current tasks making sure
+   * there's room for the most important ones and this application does not
+   * interfere with Tomcat overall by becoming a runaway application.
+   */
+  private void preventServerCrash() {
+    if (taskList.size() > MAXIMUM_TASKS_AMOUNT) {
+      StringBuffer message = new StringBuffer();
+      for (WatchDogCheckTask task : taskList) {
+        message.append("Time: ").append(task.scheduledExecutionTime()).append("..... ").append(task.getTaskUrl())
+            .append('\n');
+        task.cancel();
+      }
+      Mailer.sendMail("Admin", "WARNING PageWatch exceeded 125 tasks", message.toString());
+    }
+  }
+
+  /**
+   * Verify duration of each task, if running longer than 15 minutes then report
+   * and kill that task
+   */
+  private void checkStuckTasks() {
+    for (WatchDogCheckTask task : taskList) {
+      if (System.currentTimeMillis() - task.scheduledExecutionTime() >= FIFTEEN_MINUTES_IN_MILLISECONDS) {
+        LOGGER.trace("WARNING task is running for more than 15 minutes: " + task.getTaskUrl());
+        Mailer.sendMail("Admin", "WARNING task is running for more than 15 minutes", task.getTaskUrl());
+        task.cancel();
+      }
+    }
+  }
+
   public void addTaskToList(WatchDogCheckTask pct) {
-    LOGGER.debug("addTaskToList(WatchDogCheckTask) - start");
-
     taskList.add(pct);
-
-    LOGGER.debug("addTaskToList(WatchDogCheckTask) - end");
   }
 
   /**
@@ -140,8 +128,8 @@ public class MonitorTask extends TimerTask {
    * 
    * @return String lastrun
    */
-  public static String getLastrun() {
-    return lastrun;
+  public String getLastrun() {
+    return lastRun;
   }
 
 }

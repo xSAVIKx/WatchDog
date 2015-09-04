@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 
 import com.github.xsavikx.websitemonitor.constants.ApplicationConstants;
@@ -17,16 +18,9 @@ import com.github.xsavikx.websitemonitor.mailer.Mailer;
 import com.github.xsavikx.websitemonitor.timertasks.MasterTask;
 import com.github.xsavikx.websitemonitor.timertasks.MonitorTask;
 
-/**
- * This is the applications main servlet that gets started automatically.<br>
- * 
- * @author Erik Bogaert
- * @version July 2009
- */
 public class StartupServlet extends javax.servlet.http.HttpServlet implements javax.servlet.Servlet {
+  private static final long serialVersionUID = -6387768385216929007L;
   private static final Logger LOGGER = Logger.getLogger(StartupServlet.class);
-
-  static final long serialVersionUID = 1L;
 
   /**
    * Servlet init() method , kicks off all permanent timertasks.
@@ -108,10 +102,14 @@ public class StartupServlet extends javax.servlet.http.HttpServlet implements ja
     ApplicationConstants.fromAdress = context.getInitParameter("fromadress");
     ApplicationConstants.emailUsername = context.getInitParameter("emailusername");
     ApplicationConstants.emailPassword = context.getInitParameter("emailpassword");
-    ApplicationConstants.delayBetweenRecord = Integer.valueOf((context.getInitParameter("delayBetweenRecord")));
-    ApplicationConstants.mainTaskInterval = Integer.valueOf((context.getInitParameter("mainTaskInterval")));
-
+    String delayBetweenRecord = context.getInitParameter("delayBetweenRecord");
+    if (NumberUtils.isDigits(delayBetweenRecord)) {
+      ApplicationConstants.delayBetweenRecord = Integer.valueOf(delayBetweenRecord);
+    }
+    String mainTaskInterval = context.getInitParameter("mainTaskInterval");
+    if (NumberUtils.isDigits(mainTaskInterval)) {
+      ApplicationConstants.mainTaskInterval = Integer.valueOf(mainTaskInterval);
+    }
     LOGGER.debug("initApplicationConstants(ServletContext) - end");
   }
-
 }
