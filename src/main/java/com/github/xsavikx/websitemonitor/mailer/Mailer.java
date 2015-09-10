@@ -118,7 +118,7 @@ public class Mailer {
     LOGGER.debug("sendMail(String, String, String) - start");
 
     List<String> mailList = new ArrayList<String>();
-    if (mailAdress.equals("Admin")) {
+    if (mailAdress.equalsIgnoreCase("Admin")) {
       mailList.add(administrator_email);
     } else {
       mailList.add(mailAdress);

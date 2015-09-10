@@ -77,7 +77,7 @@ public class WatchDogWebsiteDAO extends AbstractWatchDogDAO {
             checkList.add(WatchDogCheck);
           }
           if (checkList.size() >= MAXIMUM_CHECK_LIST_SIZE) {
-            // send email to admin here
+            sendMaximumCheckListSizeExceeded(checkList);
           }
 
           LOGGER.debug("getTasksToCheck() - end");
